@@ -181,7 +181,31 @@ class SliderGui():
        
             # Create function to be called when slider value is changed
             
+        def autoscale_y(ax,margin=0.1):
+            """This function rescales the y-axis based on the data that is visible given the current xlim of the axis.
+            ax -- a matplotlib axes object
+            margin -- the fraction of the total height of the y-data to pad the upper and lower ylims"""
         
+        
+            def get_bottom_top(line):
+                xd = line.get_xdata()
+                yd = line.get_ydata()
+                lo,hi = ax.get_xlim()
+                y_displayed = yd[((xd>lo) & (xd<hi))]
+                h = np.max(y_displayed) - np.min(y_displayed)
+                bot = np.min(y_displayed)-margin*h
+                top = np.max(y_displayed)+margin*h
+                return bot,top
+        
+            lines = ax.get_lines()
+            bot,top = np.inf, -np.inf
+        
+            for line in lines:
+                new_bot, new_top = get_bottom_top(line)
+                if new_bot < bot: bot = new_bot
+                if new_top > top: top = new_top
+        
+            ax.set_ylim(bot,top)
          
         def update(val):
             f = PowerLoss.val
@@ -268,14 +292,18 @@ class SliderGui():
             z.set_ydata(NumberDensityAtTargetMatrix[c][b][a])
             rr.set_ydata(FluxAtTargetMatrix[c][b][a]) 
             rrr.set_ydata(PressureAtSolMidPointMatrix[c][b][a])
-            rrrr.set_ydata(PressureAtTargetMatrix[c][b][a])    
+            rrrr.set_ydata(PressureAtTargetMatrix[c][b][a])
+            autoscale_y(ax1)
+            autoscale_y(ax2)
+            autoscale_y(ax3)
+            autoscale_y(ax4) 
             # Call update function when slider value is changed
         PowerLoss.on_changed(update)
         MomentumLoss.on_changed(update)
         ConductionLoss.on_changed(update)
         
         
-             
+            
         ax1.xaxis.set_major_locator(MultipleLocator(1))
         ax1.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
         ax1.xaxis.set_minor_locator(MultipleLocator(1))
