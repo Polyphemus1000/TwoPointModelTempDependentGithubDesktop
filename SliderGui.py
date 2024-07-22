@@ -9,7 +9,24 @@ from matplotlib.ticker import FormatStrFormatter
 from Calculation_Numeric import Calculation_Numeric
 
 '''
-The use of the update function is perturbing
+This is the class that produces all the pretty plots. 
+It takes the values obtained from the InitialGui program which insubstatiates it and uses these to fill various 4 x 4 matrices through passing values calculated by the
+GetValues method. 
+
+We end up with six 4 x 4 matrices, TempAtSolMidPointMatrix,  NumberDensityAtTargetMatrix, etc which are used to plot the lines in the plots on the three graphs, 2 plots for the first
+graph, 2 plots for the second and 3 plots for the third. One of the plots is reproduced across the plots.
+
+The matices have a row vector based on three variables, PowerLoss, ConductionLoss and MomentumLoss. So we have a row vector of 90 points which corresponds to the 11 possible values of the 
+variables P0werLoss, ConductionLoss and MomentumLoss. There are therefore 11^3 possible 90 row vectors.
+
+The use of the sliders identifies the number for the 1 to 11 for the PowerLoss, 1 to 11 for the ConductionLoss and 1 to 11 for the MomenturmLoss.
+The RowVector values [90 values] are the values that are used to plot the line
+
+This class insubstatiates the Calculation_Numeric class which is a front-end for the solver where a reduced cubic equation is solved. This provides a set of values based on different x values.
+
+We have chosen to populate all the values in the 4 x 4 grid. It may have been quicker to calculate the values of the Row Vectors on the fly.
+
+
 
 '''
 
@@ -18,13 +35,13 @@ class SliderGui():
     
     def __init__(self):
         pass
-      
+    #initialise an empty Slider Gui object 
       
     
     def GetValues(self, pp,gg, dd,ee,ff, hh, ii):
-        self.TempAtTarget=0.0;
-        self.TempAtSolMidPoint=0.0
-        self.NumberDensityAtTarget=0.0
+        self.TempAtTarget=0.0; # set dummy initial values
+        self.TempAtSolMidPoint=0.0 # set dummy initial values
+        self.NumberDensityAtTarget=0.0 # set dummy initial values
         try:
              #print('This is p', pp)
              NumberDensitySOLMid = pp # not sure why you have to use *args for this to work
@@ -37,17 +54,8 @@ class SliderGui():
              #self.ClickedItem = self.r.get() # get a numeric values back which is what we test for in the 'if' block below and in the 'showGraph' function 
             # print('This is clicked item', self.ClickedItem)
             # if self.ClickedItem ==1:
-             P= Calculation_Numeric() # insubstantiate the numberic solver
-            # print('We are using a Numberic Calculation')
-             '''
-             elif self.ClickedItem==2:
-                 P=Calculation_Solver() # insubstantiate the symbolic solver
-                 print('We are using a Solver Calculation')
-             elif self.ClickedItem ==3:
-                 P=Calculation_Analytic() # insubstantiate the analytic solver
-                 print('We are using an Analytic  Calculation')
-             '''
-            # print(NumberDensitySOLMid)
+             P= Calculation_Numeric() # insubstantiate the numberic front-end
+             #We then use the Calculate function within the object to 
              P.Calculate(NumberDensitySOLMid, self.ParallelHeatFlux, fmol, fmomentum, fconduction, TokamakMajorRadius, TokamakSafetyFactor) # use the calculate function present in all solvers
              #print('This is the temperature at the target', P.TemperatureTarget)
              self.TempAtTarget= P.TemperatureTarget #make the results available for the rest of the program
@@ -146,19 +154,19 @@ class SliderGui():
         rrrr,= ax4.plot(t, PressureAtTargetMatrix[r-1][q-1][n-1], color = 'green') # This is where we plot the values
           
             # Create axes for frequency and amplitude sliders
-        axPowerLoss = plt.axes([0.25, 0.15, 0.65, 0.03])
+        axPowerLoss = plt.axes([0.25, 0.15, 0.65, 0.03]) # This is where we set the axes up relative to the other axes
         axMomentumLoss = plt.axes([0.25, 0.1, 0.65, 0.03])
         axConductionLoss = plt.axes([0.25, 0.05, 0.65, 0.03]) 
            
-            # Create a slider from 0.0 to 1 in axes axfreq
-            # with 3 as initial value
+            # Create a slider from 0.0 to 1 in axes axPowerLoss
         PowerLoss = Slider(ax = axPowerLoss,label= 'PowerLoss', valmin= 0.0, valmax = 1.0, valinit =0, valstep=0.1)
              
-            # Create a slider from 0.0 to 10.0 in axes axfreq
-            # with 5 as initial value and valsteps of 1.0
+            # Create a slider from 0.0 to 5.5 in axes axMomentumLoss
         MomentumLoss = Slider(ax = axMomentumLoss,label= 'MomentumLoss', valmin= 0.5, valmax = 5.5, valinit =0.5, valstep=0.5)
              
         ConductionLoss = Slider(ax = axConductionLoss,label= 'ConductionLoss', valmin= 0.0, valmax = 1.0, valinit =0, valstep=0.1)
+        
+        # Do the labelling
            
         ax1.set_xlabel(f'Electron Number Density at SOL Mid-point starting at {p} #/m$^3$')
         ax1.set_ylabel("Temp \n in eV", rotation=0, ha = 'right', va = 'center')
@@ -208,6 +216,8 @@ class SliderGui():
             ax.set_ylim(bot,top)
          
         def update(val):
+            # This is the function that updates the graphs based on where the sliders are
+            # Get the values from the slider
             f = PowerLoss.val
             h = MomentumLoss.val
             i = ConductionLoss.val
@@ -215,9 +225,10 @@ class SliderGui():
             b=0
             c=0
             #print('This is the fmol value', PowerLoss.val, MomentumLoss.val)
+            # This is a if structure for the PowerLoss slider
             if f==0:
                 a= n-1
-            if f==0.1:
+            elif f==0.1:
                  a = n-2
             elif f==0.2:
                  a= n-3  
@@ -237,10 +248,12 @@ class SliderGui():
                  a=n-10
             elif f ==1.0:
                  a=n-11
+                 
+            # This is a if structure for the MomentumLoss slider
             
             if  round(h,3) == 0.5:
                     b = q-1    
-            if  round(h,3) == 1.0:
+            elif  round(h,3) == 1.0:
                     b = q-2
             elif round(h,3) == 1.5:
                     b = q-3 
@@ -260,11 +273,13 @@ class SliderGui():
                     b = q-10 
             elif round(h,3) == 5.5:
                     b = q-11 
+                    
+            # This is a if structure for the ConductionLoss slider
             
             
             if  round(i,3) == 0:
                     c = r-1    
-            if  round(i,3) == 0.1:
+            elif  round(i,3) == 0.1:
                     c = r-2
             elif round(i,3) == 0.2:
                     c = r-3 
@@ -286,24 +301,26 @@ class SliderGui():
                     c = r-11 
                     
             
-                       
+            # Get the line values          
             l.set_ydata(TempAtTargetMatrix[c][b][a])        
             ll.set_ydata(TempAtSolMidPointMatrix[c][b][a])
             z.set_ydata(NumberDensityAtTargetMatrix[c][b][a])
             rr.set_ydata(FluxAtTargetMatrix[c][b][a]) 
             rrr.set_ydata(PressureAtSolMidPointMatrix[c][b][a])
             rrrr.set_ydata(PressureAtTargetMatrix[c][b][a])
+            # Scale the y axis 
             autoscale_y(ax1)
             autoscale_y(ax2)
             autoscale_y(ax3)
             autoscale_y(ax4) 
             # Call update function when slider value is changed
+        #Update the graphs
         PowerLoss.on_changed(update)
         MomentumLoss.on_changed(update)
         ConductionLoss.on_changed(update)
         
         
-            
+        # set the grid size for the axes    
         ax1.xaxis.set_major_locator(MultipleLocator(1))
         ax1.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
         ax1.xaxis.set_minor_locator(MultipleLocator(1))
